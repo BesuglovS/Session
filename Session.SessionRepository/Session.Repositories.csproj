@@ -31,10 +31,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="EntityFramework">
-      <HintPath>..\packages\EntityFramework.6.0.1\lib\net45\EntityFramework.dll</HintPath>
+      <HintPath>..\packages\EntityFramework.6.0.2\lib\net45\EntityFramework.dll</HintPath>
     </Reference>
     <Reference Include="EntityFramework.SqlServer">
-      <HintPath>..\packages\EntityFramework.6.0.1\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+      <HintPath>..\packages\EntityFramework.6.0.2\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -55,6 +55,14 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ScheduleRepository\Schedule.DomainClasses\Schedule.DomainClasses.csproj">
+      <Project>{04c588a6-087c-4d73-966c-6402e717545c}</Project>
+      <Name>Schedule.DomainClasses</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ScheduleRepository\Schedule.Repository\Schedule.Repositories.csproj">
+      <Project>{8b084795-2d5d-4185-abf7-0719a3d709c3}</Project>
+      <Name>Schedule.Repositories</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Session.Constants\Session.Constants.csproj">
       <Project>{40d79fab-75e6-4bcc-8b5c-00d1076b1368}</Project>
       <Name>Session.Constants</Name>
