@@ -51,5 +51,31 @@ namespace Session.wnu
 
             return "dataStream == null";
         }
+
+        public static string UploadHttpPath = "http://wiki.nayanova.edu/_php/includes/";
+        public static string UploadFtpPath = "ftp://wiki.nayanova.edu/";
+
+        public static void UploadFile(string sourcefile, string destfile)
+        {
+            // Get the object used to communicate with the server.
+            FtpWebRequest request = (FtpWebRequest)WebRequest.Create(UploadFtpPath + destfile);
+            request.UseBinary = true;
+            request.Method = WebRequestMethods.Ftp.UploadFile;
+
+            // This example assumes the FTP site uses anonymous logon.
+            request.Credentials = new NetworkCredential(Session.Properties.Settings.Default.wnuUserName, Session.Properties.Settings.Default.wnuPassword);
+
+            byte[] b = File.ReadAllBytes(sourcefile);
+
+            request.ContentLength = b.Length;
+            using (Stream s = request.GetRequestStream())
+            {
+                s.Write(b, 0, b.Length);
+            }
+
+            FtpWebResponse response = (FtpWebResponse)request.GetResponse();
+
+            response.Close();
+        }
     }
 }

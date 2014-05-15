@@ -4,7 +4,10 @@ using Session.DataLayer.Migrations;
 using Session.DomainClasses;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Entity;
+using System.Data.Entity.Infrastructure;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,16 +16,46 @@ namespace Session.Repositories
 {
     public class SessionRepository : IDisposable
     {
-        private readonly SessionContext _context = new SessionContext();
+        public string ConnectionString { get; set; }
 
-        public SessionRepository()
+        public SessionRepository(string connectionString)
         {
             Database.SetInitializer(new MigrateDatabaseToLatestVersion<SessionContext, Configuration>());
+
+            ConnectionString = connectionString;
+        }
+
+        public void ChangeConnectionString(string connectionString)
+        {
+            ConnectionString = connectionString;
+        }
+
+        public void CreateDB()
+        {
+            using (var context = new SessionContext(ConnectionString))
+            {
+                if (!context.Database.Exists())
+                {
+                    ((IObjectContextAdapter)context).ObjectContext.CreateDatabase();
+                }
+            }
+        }
+
+        public void RecreateDB()
+        {
+            using (var context = new SessionContext(ConnectionString))
+            {
+                context.Database.Delete();
+                context.Database.CreateIfNotExists();
+            }
         }
 
         private void Dispose(bool b)
         {
-            _context.Dispose();
+            using (var context = new SessionContext(ConnectionString))
+            {
+                context.Dispose();
+            }
         }
 
         public void Dispose()
@@ -32,139 +65,188 @@ namespace Session.Repositories
 
         public void ClearAllExams()
         {
-            var examIds = _context.Exams.Select(e => e.ExamId).ToList();
-
-            foreach (var examId in examIds)
+            using (var context = new SessionContext(ConnectionString))
             {
-                RemoveExam(examId);
+                var examIds = context.Exams.Select(e => e.ExamId).ToList();
+
+                foreach (var examId in examIds)
+                {
+                    RemoveExam(examId);
+                }
             }
         }
 
         public void ClearExamLogs()
         {
-            var logIds = _context.EventLog.Select(le => le.LogEventId).ToList();
-
-            foreach (var logId in logIds)
+            using (var context = new SessionContext(ConnectionString))
             {
-                RemoveLogEvent(logId);
+                var logIds = context.EventLog.Select(le => le.LogEventId).ToList();
+
+                foreach (var logId in logIds)
+                {
+                    RemoveLogEvent(logId);
+                }
             }
         }
 
         private void RemoveLogEvent(int logEventId)
         {
-            var logEvent = GetLogEvent(logEventId);
+            using (var context = new SessionContext(ConnectionString))
+            {
+                var logEvent = context.EventLog.FirstOrDefault(le => le.LogEventId == logEventId);
 
-            _context.EventLog.Remove(logEvent);
-            _context.SaveChanges();
+                context.EventLog.Remove(logEvent);
+                context.SaveChanges();
+            }
         }
 
         private LogEvent GetLogEvent(int logEventId)
         {
-            return _context.EventLog.FirstOrDefault(le => le.LogEventId == logEventId);
+            using (var context = new SessionContext(ConnectionString))
+            {
+                return context
+                    .EventLog
+                    .Include(e => e.OldExam)
+                    .Include(e => e.NewExam)
+                    .FirstOrDefault(le => le.LogEventId == logEventId);
+            }
         }
 
 
         public int GetTotalExamsCount()
         {
-            return _context
-                .Exams
-                .Count(e => e.IsActive);
+            using (var context = new SessionContext(ConnectionString))
+            {
+                return context
+                    .Exams
+                    .Count(e => e.IsActive);
+            }
         }
 
         public List<Exam> GetAllExamRecords()
         {
-            return _context
-                .Exams
-                .ToList();
+            using (var context = new SessionContext(ConnectionString))
+            {
+                return context
+                    .Exams
+                    .ToList();
+            }
         }
 
         public List<Exam> GetAllExams()
         {
-            return _context
-                .Exams
-                .Where(e => e.IsActive)
-                .ToList();
+            using (var context = new SessionContext(ConnectionString))
+            {
+                return context
+                    .Exams
+                    .Where(e => e.IsActive)
+                    .ToList();
+            }
         }
 
         public List<Exam> GetFiltredExams(Func<Exam, bool> condition)
         {
-            return _context.Exams.ToList().Where(condition).ToList();
+            using (var context = new SessionContext(ConnectionString))
+            {
+                return context.Exams.ToList().Where(condition).ToList();
+            }
         }
 
         public Exam GetFirstFiltredExam(Func<Exam, bool> condition)
         {
-            return _context.Exams.ToList().FirstOrDefault(condition);
+            using (var context = new SessionContext(ConnectionString))
+            {
+                return context.Exams.ToList().FirstOrDefault(condition);
+            }
         }
 
         public Exam GetExam(int examId)
         {
-            return _context.Exams.FirstOrDefault(a => a.ExamId == examId);
+            using (var context = new SessionContext(ConnectionString))
+            {
+                return context.Exams.FirstOrDefault(a => a.ExamId == examId);
+            }
         }
         
         public void AddExam(Exam exam)
         {
-            exam.ExamId = 0;
+            using (var context = new SessionContext(ConnectionString))
+            {
+                exam.ExamId = 0;
 
-            _context.Exams.Add(exam);
-            _context.SaveChanges();
+                context.Exams.Add(exam);
+                context.SaveChanges();
+            }
         }
 
         public void UpdateExam(Exam exam)
         {
-            var oldExam = GetExam(exam.ExamId);
-            oldExam.IsActive = false;
-            
-            exam.ExamId = 0;
+            using (var context = new SessionContext(ConnectionString))
+            {
+                var oldExam = context.Exams.FirstOrDefault(e => e.ExamId == exam.ExamId);
+                oldExam.IsActive = false;
 
-            _context.Exams.Add(exam);
-            _context.SaveChanges();
+                exam.ExamId = 0;
 
-            var logEntry = new LogEvent() { OldExam = oldExam, NewExam = exam, DateTime = DateTime.Now };
+                context.Exams.Add(exam);
+                context.SaveChanges();
 
-            _context.EventLog.Add(logEntry);
-            _context.SaveChanges();
+                var logEntry = new LogEvent() { OldExam = oldExam, NewExam = exam, DateTime = DateTime.Now };
+
+                context.EventLog.Add(logEntry);
+                context.SaveChanges();
+            }
         }
 
         public void UpdateExamWOLog(Exam exam)
         {
-            var curExam = GetExam(exam.ExamId);
+            using (var context = new SessionContext(ConnectionString))
+            {
+                var curExam = GetExam(exam.ExamId);
 
-            curExam.ConsultationAuditoriumId = exam.ConsultationAuditoriumId;
-            curExam.ConsultationDateTime = exam.ConsultationDateTime;
-            curExam.DisciplineId = exam.DisciplineId;
-            curExam.ExamAuditoriumId = exam.ExamAuditoriumId;
-            curExam.ExamDateTime = exam.ExamDateTime;
-            curExam.ExamId = exam.ExamId;
-            curExam.IsActive = exam.IsActive;            
+                curExam.ConsultationAuditoriumId = exam.ConsultationAuditoriumId;
+                curExam.ConsultationDateTime = exam.ConsultationDateTime;
+                curExam.DisciplineId = exam.DisciplineId;
+                curExam.ExamAuditoriumId = exam.ExamAuditoriumId;
+                curExam.ExamDateTime = exam.ExamDateTime;
+                curExam.ExamId = exam.ExamId;
+                curExam.IsActive = exam.IsActive;
 
-            _context.SaveChanges();
+                context.SaveChanges();
+            }
         }
 
         public void RemoveExam(int examId)
         {
-            var exam = GetExam(examId);
+            using (var context = new SessionContext(ConnectionString))
+            {
+                var exam = context.Exams.FirstOrDefault(e => e.ExamId == examId);
 
-            _context.Exams.Remove(exam);
-            try
-            {
-                _context.SaveChanges();
-            }
-            catch (Exception e)
-            {
-                throw;
+                context.Exams.Remove(exam);
+                try
+                {
+                    context.SaveChanges();
+                }
+                catch (Exception e)
+                {
+                    throw;
+                }
             }
             
         }
 
         public void AddExamsRange(IEnumerable<Exam> examList)
         {
-            foreach (var exam in examList)
+            using (var context = new SessionContext(ConnectionString))
             {
-                exam.ExamId = 0;
-                _context.Exams.Add(exam);
-            }
+                foreach (var exam in examList)
+                {
+                    exam.ExamId = 0;
+                    context.Exams.Add(exam);
+                }
 
-            _context.SaveChanges();
+                context.SaveChanges();
+            }
         }
 
         public void FillExamListFromSchedule(ScheduleRepository _sRepo)
@@ -224,14 +306,22 @@ namespace Session.Repositories
 
         public List<LogEvent> GetAllLogEvents()
         {
-            return _context
-                .EventLog
-                .ToList();
+            using (var context = new SessionContext(ConnectionString))
+            {
+                return context
+                    .EventLog
+                    .Include(e => e.OldExam)
+                    .Include(e => e.NewExam)
+                    .ToList();
+            }
         }
 
         public void SaveChanges()
         {
-            _context.SaveChanges();
+            using (var context = new SessionContext(ConnectionString))
+            {
+                context.SaveChanges();
+            }
         }
 
         public Dictionary<DateTime, Dictionary<int, List<SessionEvent>>> GetFacultyExams(ScheduleRepository _sRepo, List<int> groups)
@@ -364,6 +454,64 @@ namespace Session.Repositories
             }
 
             return result;
+        }
+
+        public void BackupDB(string filename)
+        {
+            using (var context = new SessionContext(ConnectionString))
+            {
+                var dbName = ExtractDBName(context.Database.Connection.ConnectionString);
+
+                if (dbName == "")
+                {
+                    return;
+                }
+
+                var backupSQL = "BACKUP DATABASE " + dbName + " TO DISK = '" + filename + "' WITH FORMAT, MEDIANAME='" + dbName + "'";
+
+                ExecuteQuery(backupSQL);
+            }
+        }
+
+        public string ExtractDBName(string connectionString)
+        {
+            int startIndex = connectionString.IndexOf("Database=") + 9;
+
+            if (startIndex == -1)
+            {
+                return "";
+            }
+
+            int endIndex = -1;
+            if (startIndex != 0)
+            {
+                endIndex = connectionString.IndexOf(';', startIndex);
+            }
+
+            return connectionString.Substring(startIndex, endIndex - startIndex);
+        }
+
+        private void ExecuteQuery(string SQLQuery)
+        {
+            SqlConnection sqlConnection = new SqlConnection(ConnectionString);                            
+
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandText = SQLQuery;
+            cmd.CommandType = CommandType.Text;
+            cmd.Connection = sqlConnection;
+
+            sqlConnection.Open();
+
+            cmd.ExecuteNonQuery();
+
+            sqlConnection.Close();
+            
+        }
+
+        public void RestoreDB(string filename)
+        {
+            var restoreSQL = "use master; RESTORE DATABASE Session2DB FROM DISK = '" + filename + "' WITH REPLACE";
+            ExecuteQuery(restoreSQL);
         }
     }
 }

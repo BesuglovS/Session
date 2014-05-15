@@ -29,6 +29,9 @@
         private void InitializeComponent()
         {
             this.controlsPanel = new System.Windows.Forms.Panel();
+            this.DownloadRestore = new System.Windows.Forms.Button();
+            this.BackupUpload = new System.Windows.Forms.Button();
+            this.WordExport = new System.Windows.Forms.Button();
             this.upload = new System.Windows.Forms.Button();
             this.showAll = new System.Windows.Forms.Button();
             this.BigRedButton = new System.Windows.Forms.Button();
@@ -36,7 +39,9 @@
             this.label1 = new System.Windows.Forms.Label();
             this.viewPanel = new System.Windows.Forms.Panel();
             this.examsView = new System.Windows.Forms.DataGridView();
-            this.WordExport = new System.Windows.Forms.Button();
+            this.Refresh = new System.Windows.Forms.Button();
+            this.TeacherList = new System.Windows.Forms.ComboBox();
+            this.TeacherSchedule = new System.Windows.Forms.Button();
             this.controlsPanel.SuspendLayout();
             this.viewPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.examsView)).BeginInit();
@@ -44,6 +49,11 @@
             // 
             // controlsPanel
             // 
+            this.controlsPanel.Controls.Add(this.TeacherSchedule);
+            this.controlsPanel.Controls.Add(this.TeacherList);
+            this.controlsPanel.Controls.Add(this.Refresh);
+            this.controlsPanel.Controls.Add(this.DownloadRestore);
+            this.controlsPanel.Controls.Add(this.BackupUpload);
             this.controlsPanel.Controls.Add(this.WordExport);
             this.controlsPanel.Controls.Add(this.upload);
             this.controlsPanel.Controls.Add(this.showAll);
@@ -53,12 +63,42 @@
             this.controlsPanel.Dock = System.Windows.Forms.DockStyle.Top;
             this.controlsPanel.Location = new System.Drawing.Point(0, 0);
             this.controlsPanel.Name = "controlsPanel";
-            this.controlsPanel.Size = new System.Drawing.Size(751, 80);
+            this.controlsPanel.Size = new System.Drawing.Size(939, 80);
             this.controlsPanel.TabIndex = 0;
+            // 
+            // DownloadRestore
+            // 
+            this.DownloadRestore.Location = new System.Drawing.Point(467, 16);
+            this.DownloadRestore.Name = "DownloadRestore";
+            this.DownloadRestore.Size = new System.Drawing.Size(77, 47);
+            this.DownloadRestore.TabIndex = 7;
+            this.DownloadRestore.Text = "Download + Restore";
+            this.DownloadRestore.UseVisualStyleBackColor = true;
+            this.DownloadRestore.Click += new System.EventHandler(this.DownloadRestore_Click);
+            // 
+            // BackupUpload
+            // 
+            this.BackupUpload.Location = new System.Drawing.Point(384, 16);
+            this.BackupUpload.Name = "BackupUpload";
+            this.BackupUpload.Size = new System.Drawing.Size(77, 47);
+            this.BackupUpload.TabIndex = 6;
+            this.BackupUpload.Text = "Backup + Upload";
+            this.BackupUpload.UseVisualStyleBackColor = true;
+            this.BackupUpload.Click += new System.EventHandler(this.BackupUpload_Click);
+            // 
+            // WordExport
+            // 
+            this.WordExport.Location = new System.Drawing.Point(301, 16);
+            this.WordExport.Name = "WordExport";
+            this.WordExport.Size = new System.Drawing.Size(77, 47);
+            this.WordExport.TabIndex = 5;
+            this.WordExport.Text = "Экспорт в Word";
+            this.WordExport.UseVisualStyleBackColor = true;
+            this.WordExport.Click += new System.EventHandler(this.WordExport_Click);
             // 
             // upload
             // 
-            this.upload.Location = new System.Drawing.Point(182, 17);
+            this.upload.Location = new System.Drawing.Point(221, 16);
             this.upload.Name = "upload";
             this.upload.Size = new System.Drawing.Size(74, 49);
             this.upload.TabIndex = 4;
@@ -78,7 +118,7 @@
             // 
             // BigRedButton
             // 
-            this.BigRedButton.Location = new System.Drawing.Point(668, 12);
+            this.BigRedButton.Location = new System.Drawing.Point(856, 17);
             this.BigRedButton.Name = "BigRedButton";
             this.BigRedButton.Size = new System.Drawing.Size(71, 52);
             this.BigRedButton.TabIndex = 2;
@@ -110,7 +150,7 @@
             this.viewPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.viewPanel.Location = new System.Drawing.Point(0, 80);
             this.viewPanel.Name = "viewPanel";
-            this.viewPanel.Size = new System.Drawing.Size(751, 458);
+            this.viewPanel.Size = new System.Drawing.Size(939, 458);
             this.viewPanel.TabIndex = 1;
             // 
             // examsView
@@ -123,25 +163,43 @@
             this.examsView.Name = "examsView";
             this.examsView.ReadOnly = true;
             this.examsView.RowHeadersVisible = false;
-            this.examsView.Size = new System.Drawing.Size(751, 458);
+            this.examsView.Size = new System.Drawing.Size(939, 458);
             this.examsView.TabIndex = 0;
             this.examsView.DoubleClick += new System.EventHandler(this.examsView_DoubleClick);
             // 
-            // WordExport
+            // Refresh
             // 
-            this.WordExport.Location = new System.Drawing.Point(262, 17);
-            this.WordExport.Name = "WordExport";
-            this.WordExport.Size = new System.Drawing.Size(77, 47);
-            this.WordExport.TabIndex = 5;
-            this.WordExport.Text = "Экспорт в Word";
-            this.WordExport.UseVisualStyleBackColor = true;
-            this.WordExport.Click += new System.EventHandler(this.WordExport_Click);
+            this.Refresh.Location = new System.Drawing.Point(182, 16);
+            this.Refresh.Name = "Refresh";
+            this.Refresh.Size = new System.Drawing.Size(33, 50);
+            this.Refresh.TabIndex = 8;
+            this.Refresh.Text = "GO";
+            this.Refresh.UseVisualStyleBackColor = true;
+            this.Refresh.Click += new System.EventHandler(this.Refresh_Click);
+            // 
+            // TeacherList
+            // 
+            this.TeacherList.FormattingEnabled = true;
+            this.TeacherList.Location = new System.Drawing.Point(557, 17);
+            this.TeacherList.Name = "TeacherList";
+            this.TeacherList.Size = new System.Drawing.Size(293, 21);
+            this.TeacherList.TabIndex = 9;
+            // 
+            // TeacherSchedule
+            // 
+            this.TeacherSchedule.Location = new System.Drawing.Point(557, 43);
+            this.TeacherSchedule.Name = "TeacherSchedule";
+            this.TeacherSchedule.Size = new System.Drawing.Size(293, 23);
+            this.TeacherSchedule.TabIndex = 10;
+            this.TeacherSchedule.Text = "GO";
+            this.TeacherSchedule.UseVisualStyleBackColor = true;
+            this.TeacherSchedule.Click += new System.EventHandler(this.TeacherSchedule_Click);
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(751, 538);
+            this.ClientSize = new System.Drawing.Size(939, 538);
             this.Controls.Add(this.viewPanel);
             this.Controls.Add(this.controlsPanel);
             this.Name = "MainForm";
@@ -166,6 +224,11 @@
         private System.Windows.Forms.DataGridView examsView;
         private System.Windows.Forms.Button upload;
         private System.Windows.Forms.Button WordExport;
+        private System.Windows.Forms.Button DownloadRestore;
+        private System.Windows.Forms.Button BackupUpload;
+        private System.Windows.Forms.Button Refresh;
+        private System.Windows.Forms.Button TeacherSchedule;
+        private System.Windows.Forms.ComboBox TeacherList;
     }
 }
 

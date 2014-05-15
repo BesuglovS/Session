@@ -6,7 +6,12 @@ namespace Session.DataLayer
     public class SessionContext : DbContext
     {
         public SessionContext()
-            : base("Name=SessionConnection")
+            : base("data source=tcp:" + "127.0.0.1" + ",1433;Database=Session2DB;User ID = sa;Password = ghjuhfvvf;multipleactiveresultsets=True")
+        {
+        }
+
+        public SessionContext(string connectionString)
+            : base(connectionString)
         {
         }
 

@@ -17,6 +17,8 @@ using Session.wnu.MySQLDomainClasses;
 using Word = Microsoft.Office.Interop.Word;
 using System.Globalization;
 using Microsoft.Office.Core;
+using System.Net;
+using Session.DomainClasses;
 
 namespace Session
 {
@@ -34,7 +36,7 @@ namespace Session
         {
             InitializeComponent();
 
-            _repo = new SessionRepository();
+            _repo = new SessionRepository("data source=tcp:" + "127.0.0.1" + ",1433;Database=Session2DB;User ID = sa;Password = ghjuhfvvf;multipleactiveresultsets=True");
             _sRepo = new ScheduleRepository("data source=tcp:" + "127.0.0.1" + ",1433;Database=ScheduleDB;User ID = sa;Password = ghjuhfvvf;multipleactiveresultsets=True");
         }
 
@@ -51,23 +53,42 @@ namespace Session
                 .ToList();
 
             var groupList = new List<StudentGroup>();
+            var TeachersList = new List<Teacher>();
 
             foreach (var discId in discIds)
             {
-                groupList.Add(_sRepo.GetDiscipline(discId).StudentGroup);
+                var disc = _sRepo.GetDiscipline(discId);
+                                
+                groupList.Add(disc.StudentGroup);
+                
+                var tefd = _sRepo.GetFirstFiltredTeacherForDiscipline(tfd => tfd.Discipline.DisciplineId == disc.DisciplineId);
+
+                if (tefd != null)
+                {
+                    TeachersList.Add(tefd.Teacher);
+                }
             }
 
             groupList = groupList
-                .GroupBy(x => x.StudentGroupId).Select(y => y.First())
+                .GroupBy(g => g.StudentGroupId)
+                .Select(x => x.First())                
+                .OrderBy(g => g.Name)                
                 .ToList();
-
-            groupList = groupList
-                .OrderBy(g => g.Name)
-                .ToList();
+            
 
             groupBox.ValueMember = "StudentGroupId";
             groupBox.DisplayMember = "Name";
-            groupBox.DataSource = groupList;            
+            groupBox.DataSource = groupList;
+
+            TeachersList = TeachersList
+                .GroupBy(t => t.TeacherId)
+                .Select(x => x.First())
+                .OrderBy(t => t.FIO)
+                .ToList();
+
+            TeacherList.ValueMember = "TeacherId";
+            TeacherList.DisplayMember = "FIO";
+            TeacherList.DataSource = TeachersList;
         }
 
         private void BigRedButton_Click(object sender, EventArgs e)
@@ -130,7 +151,12 @@ namespace Session
         }
 
         private void groupBox_SelectedIndexChanged(object sender, EventArgs e)
-        {                        
+        {
+            //UpdateExamsView();
+        }
+
+        private void UpdateExamsView()
+        {
             var groupExams = _repo
                 .GetGroupActiveExams(_sRepo, (int)groupBox.SelectedValue, false)
                 .ToList();
@@ -422,6 +448,45 @@ namespace Session
             var maxExamDate = _repo.GetAllExams().Select(e => e.ExamDateTime).Max();
 
             endSessionDate = (maxConsDate <= maxExamDate) ? maxConsDate : maxExamDate; 
+        }
+
+        private void BackupUpload_Click(object sender, EventArgs e)
+        {
+            _repo.BackupDB(Application.StartupPath + "\\Session2DB.bak");
+            WnuUpload.UploadFile(Application.StartupPath + "\\Session2DB.bak", "httpdocs/upload/DB-Backup/Session2DB.bak");
+        }
+
+        private void DownloadRestore_Click(object sender, EventArgs e)
+        {
+            var wc = new WebClient();
+            wc.DownloadFile("http://wiki.nayanova.edu/upload/DB-Backup/Session2DB.bak", Application.StartupPath + "\\Session2DB.bak");
+            _repo.RestoreDB(Application.StartupPath + "\\Session2DB.bak");
+        }
+
+        private void Refresh_Click(object sender, EventArgs e)
+        {
+            UpdateExamsView();
+        }
+
+        private void TeacherSchedule_Click(object sender, EventArgs e)
+        {
+            var teacherExams = new List<Exam>();
+
+            foreach (var exam in _repo.GetAllExams())
+            {
+                var tefd = _sRepo.GetFirstFiltredTeacherForDiscipline(tfd => tfd.Discipline.DisciplineId == exam.DisciplineId);
+
+                if (tefd != null && tefd.Teacher.TeacherId == (int)TeacherList.SelectedValue)
+                {
+                    teacherExams.Add(exam);
+                }
+            }
+
+            var ExamViewList = ExamView.FromExamList(_sRepo, teacherExams);
+
+            examsView.DataSource = ExamViewList;
+
+            TuneDataView(examsView, DataViews.ExamsView);
         }
     }
 }
