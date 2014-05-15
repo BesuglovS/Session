@@ -10,7 +10,7 @@ namespace Session.Constants
     {
         public static DateTime DefaultEmptyDateForEvent = new DateTime(2020, 1, 1);
 
-        public static DateTime DefaultEditDate = new DateTime(2014, 1, 9);
+        public static DateTime DefaultEditDate = new DateTime(2014, 6, 2);
 
         public static string UchOtdHead = "Карасёва Т.Б.";
 
@@ -19,12 +19,12 @@ namespace Session.Constants
             { 2, new List<string> { "12 Б", "13 Б", "14 Б" } }, 
             { 3, new List<string> { "12 В0", "12 В", "13 В", "14 В" } },
             { 4, new List<string> { "12 Г", "13 Г", "14 Г" } }, 
-            { 5, new List<string> { "12 Д", "13 Д", "14 Д", "15 Д" } },
-            { 6, new List<string> { "12 Е", "13 Е", "14 Е", "15 Е" } }, 
+            { 5, new List<string> { "12 Д", "13 Д", "14 Д" } },
+            { 6, new List<string> { "12 Е", "13 Е", "14 Е" } }, 
             { 7, new List<string> { "12 У", "13 У", "14 У", "15 У" } },
             { 8, new List<string> { "12 Т", "13 Т", "14 Т"} },
-            { 9, new List<string> { "12 Г(Н)", "13 Г(Н)", "14 Г(Н)"} }, 
-            { 10, new List<string> { "12 Д(Н)", "13 Д(Н)", "14 Д(Н)"} }
+            { 9, new List<string> { "12 Г(Н)", "13 Г(Н)"} }, 
+            { 10, new List<string> { "12 Д(Н)", "13 Д(Н)"} }
         };
 
         public static List<string> facultyTitles = new List<string> { 

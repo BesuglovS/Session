@@ -35,7 +35,7 @@ namespace Session
             InitializeComponent();
 
             _repo = new SessionRepository();
-            _sRepo = new ScheduleRepository();
+            _sRepo = new ScheduleRepository("data source=tcp:" + "127.0.0.1" + ",1433;Database=ScheduleDB;User ID = sa;Password = ghjuhfvvf;multipleactiveresultsets=True");
         }
 
         private void MainForm_Load(object sender, EventArgs e)
