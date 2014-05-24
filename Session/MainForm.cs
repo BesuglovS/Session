@@ -36,8 +36,8 @@ namespace Session
         {
             InitializeComponent();
 
-            _repo = new SessionRepository("data source=tcp:" + "127.0.0.1" + ",1433;Database=Session2DB;User ID = sa;Password = ghjuhfvvf;multipleactiveresultsets=True");
-            _sRepo = new ScheduleRepository("data source=tcp:" + "127.0.0.1" + ",1433;Database=ScheduleDB;User ID = sa;Password = ghjuhfvvf;multipleactiveresultsets=True");
+            _repo = new SessionRepository("data source=tcp:" + "127.0.0.1" + ",1433;Database=Session-S-13-14-1;User ID = sa;Password = ghjuhfvvf;multipleactiveresultsets=True");
+            _sRepo = new ScheduleRepository("data source=tcp:" + "127.0.0.1" + ",1433;Database=S-13-14-1;User ID = sa;Password = ghjuhfvvf;multipleactiveresultsets=True");
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -52,15 +52,15 @@ namespace Session
                 .Select(e => e.DisciplineId)
                 .ToList();
 
-            var groupList = new List<StudentGroup>();
+            //var groupList = new List<StudentGroup>();
             var TeachersList = new List<Teacher>();
 
             foreach (var discId in discIds)
             {
                 var disc = _sRepo.GetDiscipline(discId);
-                                
-                groupList.Add(disc.StudentGroup);
-                
+
+                //groupList.Add(disc.StudentGroup);
+
                 var tefd = _sRepo.GetFirstFiltredTeacherForDiscipline(tfd => tfd.Discipline.DisciplineId == disc.DisciplineId);
 
                 if (tefd != null)
@@ -69,12 +69,16 @@ namespace Session
                 }
             }
 
-            groupList = groupList
+            /*groupList = groupList
                 .GroupBy(g => g.StudentGroupId)
                 .Select(x => x.First())                
                 .OrderBy(g => g.Name)                
+                .ToList();*/
+
+            var groupList = _sRepo
+                .GetFiltredStudentGroups(sg => !(sg.Name.Contains("-") || sg.Name.Contains("I") || sg.Name.Contains(".")))
                 .ToList();
-            
+
 
             groupBox.ValueMember = "StudentGroupId";
             groupBox.DisplayMember = "Name";
@@ -93,7 +97,7 @@ namespace Session
 
         private void BigRedButton_Click(object sender, EventArgs e)
         {
-            _repo.FillExamListFromSchedule(_sRepo);           
+            _repo.FillExamListFromSchedule(_sRepo);
 
             var eprst = 999;
         }
@@ -101,7 +105,7 @@ namespace Session
         private void showAll_Click(object sender, EventArgs e)
         {
             var exams = _repo
-                .GetAllExams()                                
+                .GetAllExams()
                 .OrderBy(ex => ex.ConsultationDateTime)
                 .ToList();
 
@@ -109,7 +113,7 @@ namespace Session
 
             examsView.DataSource = ExamViewList;
 
-            TuneDataView(examsView, DataViews.ExamsView);            
+            TuneDataView(examsView, DataViews.ExamsView);
         }
 
         private void TuneDataView(DataGridView view, DataViews viewType)
@@ -147,7 +151,7 @@ namespace Session
                     view.Columns["ExamAuditorium"].HeaderText = "Аудитория экзамена";
                     break;
             }
-            
+
         }
 
         private void groupBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -184,7 +188,7 @@ namespace Session
         private void UploadClick(object sender, EventArgs e)
         {
             string result;
-            
+
             var jsonSerializer = new System.Web.Script.Serialization.JavaScriptSerializer();
 
             var mySQLExams = MySQLExam.FromExamList(_repo.GetAllExamRecords());
@@ -202,18 +206,18 @@ namespace Session
         {
             SaveAsWordDocument();
         }
-        
+
         private void SaveAsWordDocument()
         {
             DateTime beginSessionDate, endSessionDate;
             DetectSessionDates(out beginSessionDate, out endSessionDate);
-            
+
 
             object oMissing = System.Reflection.Missing.Value;
             object oEndOfDoc = "\\endofdoc"; /* \endofdoc is a predefined bookmark */
 
             //Start Word and create a new document.
-            
+
             Word._Application oWord = new Word.Application();
             oWord.Visible = true;
             Word._Document oDoc =
@@ -242,7 +246,7 @@ namespace Session
                 var facultyExams = _repo.GetFacultyExams(_sRepo, groupIds);
 
                 facultyExams = facultyExams.OrderBy(fe => fe.Key).ToDictionary((keyItem) => keyItem.Key, (valueItem) => valueItem.Value);
-                
+
                 Word.Paragraph oPara1 =
                     oDoc.Content.Paragraphs.Add(ref oMissing);
                 oPara1.Range.Font.Size = 24;
@@ -257,14 +261,14 @@ namespace Session
                 if (beginSessionDate.Month < 3)
                 {
                     var startYear = beginSessionDate.Year - 1;
-                    oPara1.Range.Text = "зимней сессии " + startYear + "-" + (startYear+1) + " учебного года" +
+                    oPara1.Range.Text = "зимней сессии " + startYear + "-" + (startYear + 1) + " учебного года" +
                         Environment.NewLine + Constants.Constants.facultyTitles[facCounter];
                 }
                 else
                 {
                     var startYear = beginSessionDate.Year - 1;
                     oPara1.Range.Text = "летней сессии " + startYear + "-" + (startYear + 1) + " учебного года" +
-                        Environment.NewLine + faculties[facCounter].Name;
+                        Environment.NewLine + Constants.Constants.facultyTitles[facCounter];
                 }
                 oPara1.Range.InsertParagraphAfter();
 
@@ -282,7 +286,7 @@ namespace Session
                 signBox.TextFrame.ContainingRange.InsertAfter("____________  А.В. Синицкий");
 
                 var groups = Constants.Constants.facultyGroups.ElementAt(facCounter).Value;
-                
+
                 Word.Table oTable;
                 Word.Range wrdRng = oDoc.Bookmarks.get_Item(ref oEndOfDoc).Range;
                 oTable = oDoc.Tables.Add(wrdRng, 1 + facultyExams.Keys.Count, 1 + groups.Count);
@@ -293,12 +297,12 @@ namespace Session
                 oTable.ApplyStyleHeadingRows = true;
 
                 oTable.Borders.Enable = 1;
-                
+
                 for (int i = 1; i <= oTable.Rows.Count; i++)
                 {
                     oTable.Rows[i].AllowBreakAcrossPages = (int)Microsoft.Office.Core.MsoTriState.msoFalse;
                 }
-                
+
 
                 oTable.Cell(1, 1).Range.Text = "Дата";
                 oTable.Cell(1, 1).Range.ParagraphFormat.Alignment =
@@ -322,7 +326,7 @@ namespace Session
 
                 for (var row = 2; row <= 1 + facultyExams.Keys.Count; row++)
                 {
-                    currentDate = facultyExams.Keys.ElementAt(row-2);
+                    currentDate = facultyExams.Keys.ElementAt(row - 2);
 
                     for (var column = 1; column <= groups.Count; column++)
                     {
@@ -366,21 +370,21 @@ namespace Session
                                     cellText += evt.Time.ToString("H:mm") + Environment.NewLine;
                                     cellText += evt.Auditorium;
 
-                                    oPara1 = oDoc.Content.Paragraphs.Add(timeTable.Cell(i+1, 1).Range);
+                                    oPara1 = oDoc.Content.Paragraphs.Add(timeTable.Cell(i + 1, 1).Range);
                                     oPara1.Range.Font.Size = 10;
                                     oPara1.Format.SpaceAfter = 0;
                                     oPara1.Range.Text = cellText;
 
                                     if (i != eventCount - 1)
                                     {
-                                        timeTable.Cell(i+1, 1).Borders[Microsoft.Office.Interop.Word.WdBorderType.wdBorderBottom].Visible = true;
+                                        timeTable.Cell(i + 1, 1).Borders[Microsoft.Office.Interop.Word.WdBorderType.wdBorderBottom].Visible = true;
                                     }
                                 }
                             }
                         }
                     }
 
-                    
+
                 }
 
 
@@ -447,7 +451,7 @@ namespace Session
             var maxConsDate = _repo.GetAllExams().Select(e => e.ConsultationDateTime).Max();
             var maxExamDate = _repo.GetAllExams().Select(e => e.ExamDateTime).Max();
 
-            endSessionDate = (maxConsDate <= maxExamDate) ? maxConsDate : maxExamDate; 
+            endSessionDate = (maxConsDate <= maxExamDate) ? maxConsDate : maxExamDate;
         }
 
         private void BackupUpload_Click(object sender, EventArgs e)

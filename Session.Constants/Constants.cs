@@ -10,7 +10,8 @@ namespace Session.Constants
     {
         public static DateTime DefaultEmptyDateForEvent = new DateTime(2020, 1, 1);
 
-        public static DateTime DefaultEditDate = new DateTime(2014, 6, 9);
+        //public static DateTime DefaultEditDate = new DateTime(2014, 6, 9);
+        public static DateTime DefaultEditDate = new DateTime(2014, 1, 9);
 
         public static string UchOtdHead = "Карасёва Т.Б.";
 
